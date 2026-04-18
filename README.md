@@ -2,11 +2,11 @@
 
 > My Claude Code statusline. Built around token management and context-rot prevention.
 
+<p align="center"><img src="assets/og.png" alt="statusline" width="760"></p>
+
 Opus 4.7 is sharp, but the new cost of sharpness is that **prompts have to be more explicit or it burns tokens at a real clip**. So my main priority right now is aggressive context management: keeping an eye on the context window, keeping an eye on session limits, and reducing thinking effort when and where possible.
 
 This statusline is one piece of that system — persistent, at-a-glance awareness so I don't find out I'm hemorrhaging tokens only when Claude tells me to `/clear`.
-
-![statusline screenshot](./assets/statusline.png)
 
 ## What it shows
 
