@@ -1,0 +1,24 @@
+{
+  "name": "statusline",
+  "description": "A Claude Code statusline with HSL-gradient ring meters for context window, 5h/7d rate limits, and an optional countdown — so you catch context rot before Anthropic tells you to /clear.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Cody Hergenroeder",
+    "email": "plugins@codyh.xyz"
+  },
+  "homepage": "https://github.com/codyhxyz/statusline",
+  "repository": "https://github.com/codyhxyz/statusline",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "statusline",
+    "context-window",
+    "rate-limits",
+    "token-management"
+  ],
+  "statusLine": {
+    "type": "command",
+    "command": "sh ${CLAUDE_PLUGIN_ROOT}/statusline-command.sh",
+    "padding": 0
+  }
+}
