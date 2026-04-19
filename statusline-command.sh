@@ -69,13 +69,14 @@ add_group() {
   if [ -z "$groups" ]; then groups="$1"; else groups="${groups}${SEP}$1"; fi
 }
 
-# Render a meter only when pct is a real value > 0. Keeps the countdown
-# (T-…) tied to a visible meter — no orphaned reset timers.
+# Render when usage > 0, or when a reset countdown (extra) exists — so the
+# weekly/5h limit cycles stay visible at 0%. Seeing "when does my limit
+# come back" matters most at the start of a cycle, not the end.
 add_meter() {
   label=$1; pct=$2; extra=$3
   [ -n "$pct" ] || return
   pct_int=$(printf '%.0f' "$pct")
-  [ "$pct_int" -gt 0 ] || return
+  [ "$pct_int" -gt 0 ] || [ -n "$extra" ] || return
   add_group "$(render_meter "$label" "$pct_int" "$extra")"
 }
 
