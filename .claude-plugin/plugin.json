@@ -1,7 +1,7 @@
 {
   "name": "statusline",
   "description": "A Claude Code statusline with HSL-gradient ring meters for context window, 5h/7d rate limits, and an optional countdown — so you catch context rot before Anthropic tells you to /clear.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Cody Hergenroeder",
     "email": "plugins@codyh.xyz"

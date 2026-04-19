@@ -57,15 +57,40 @@ render_meter() {
   printf '%s' "$out"
 }
 
-model=$(echo "$input"        | jq -r '.model.display_name // "Claude"')
-model_id=$(echo "$input"     | jq -r '.model.id // ""')
-transcript=$(echo "$input"   | jq -r '.transcript_path // ""')
-five_pct=$(echo "$input"     | jq -r '.rate_limits.five_hour.used_percentage // empty')
-five_resets=$(echo "$input"  | jq -r '.rate_limits.five_hour.resets_at // empty')
-week_pct=$(echo "$input"     | jq -r '.rate_limits.seven_day.used_percentage // empty')
-week_resets=$(echo "$input"  | jq -r '.rate_limits.seven_day.resets_at // empty')
+reset_str() {
+  [ -n "$1" ] || return
+  d=$(( $1 - $(date +%s) ))
+  [ "$d" -gt 0 ] && printf 'T-%s' "$(fmt_duration "$d")"
+}
 
-ctx_int=""; ctx_k=""
+groups=""
+add_group() {
+  [ -n "$1" ] || return
+  if [ -z "$groups" ]; then groups="$1"; else groups="${groups}${SEP}$1"; fi
+}
+
+# Render a meter only when pct is a real value > 0. Keeps the countdown
+# (T-…) tied to a visible meter — no orphaned reset timers.
+add_meter() {
+  label=$1; pct=$2; extra=$3
+  [ -n "$pct" ] || return
+  pct_int=$(printf '%.0f' "$pct")
+  [ "$pct_int" -gt 0 ] || return
+  add_group "$(render_meter "$label" "$pct_int" "$extra")"
+}
+
+add_rate_meter() {
+  label=$1; key=$2
+  pct=$(echo "$input"    | jq -r ".rate_limits.$key.used_percentage // empty")
+  resets=$(echo "$input" | jq -r ".rate_limits.$key.resets_at // empty")
+  add_meter "$label" "$pct" "$(reset_str "$resets")"
+}
+
+model=$(echo "$input"      | jq -r '.model.display_name // "Claude"')
+model_id=$(echo "$input"   | jq -r '.model.id // ""')
+transcript=$(echo "$input" | jq -r '.transcript_path // ""')
+
+ctx_pct=""; ctx_k=""
 if [ -n "$transcript" ] && [ -f "$transcript" ]; then
   case "$model_id" in
     *"[1m]"*|*"-1m"*|*"1M"*) window=1000000 ;;
@@ -81,33 +106,21 @@ if [ -n "$transcript" ] && [ -f "$transcript" ]; then
       else empty
       end' 2>/dev/null)
   if [ -n "$ctx_tokens" ] && [ "$ctx_tokens" != "null" ]; then
-    ctx_int=$(( ctx_tokens * 100 / window ))
-    [ "$ctx_int" -gt 100 ] && ctx_int=100
+    ctx_pct=$(( ctx_tokens * 100 / window ))
+    [ "$ctx_pct" -gt 100 ] && ctx_pct=100
     ctx_k="$(( (ctx_tokens + 500) / 1000 ))k"
   fi
 fi
 
-reset_str() {
-  [ -n "$1" ] || return
-  d=$(( $1 - $(date +%s) ))
-  [ "$d" -gt 0 ] && printf 'T-%s' "$(fmt_duration "$d")"
-}
-five_reset_str=$(reset_str "$five_resets")
-week_reset_str=$(reset_str "$week_resets")
+add_meter 'ctx' "$ctx_pct" "$ctx_k"
+add_rate_meter '5h' 'five_hour'
+add_rate_meter '7d' 'seven_day'
 
-groups=""
-add_group() {
-  if [ -z "$groups" ]; then groups="$1"; else groups="${groups}${SEP}$1"; fi
-}
-[ -n "$ctx_int" ]  && add_group "$(render_meter 'ctx' "$ctx_int" "$ctx_k")"
-[ -n "$five_pct" ] && add_group "$(render_meter '5h' "$(printf '%.0f' "$five_pct")" "$five_reset_str")"
-[ -n "$week_pct" ] && add_group "$(render_meter '7d' "$(printf '%.0f' "$week_pct")" "$week_reset_str")"
-
-out=$(printf '%s%s%s  %s' "$BOLD" "$model" "$RESET" "$groups")
-
-if [ -z "$ctx_int" ] && [ -z "$five_pct" ] && [ -z "$week_pct" ]; then
+if [ -z "$groups" ]; then
   cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // ""')
   out=$(printf '%s%s%s  %s%s%s' "$BOLD" "$model" "$RESET" "$DIM" "$(basename "$cwd")" "$RESET")
+else
+  out=$(printf '%s%s%s  %s' "$BOLD" "$model" "$RESET" "$groups")
 fi
 
 printf '%s' "$out"
