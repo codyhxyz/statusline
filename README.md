@@ -2,7 +2,7 @@
 
 > My Claude Code statusline. Built around token management and context-rot prevention.
 
-<p align="center"><img src="assets/og.png" alt="statusline" width="760"></p>
+<p align="center"><img src="docs/hero.gif" alt="statusline in action — ring glyph and HSL gradient across a simulated session" width="1200"></p>
 
 Opus 4.7 is sharp, but the new cost of sharpness is that **prompts have to be more explicit or it burns tokens at a real clip**. So my main priority right now is aggressive context management: keeping an eye on the context window, keeping an eye on session limits, and reducing thinking effort when and where possible.
 
